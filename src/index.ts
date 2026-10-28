@@ -34,3 +34,14 @@ console.log(`Saved plan: ${savedPlan.plan}`)
 for (const activity of result.schedule) {
   console.log(`${activity.day} ${activity.time} ${activity.name}`)
 }
+
+for (const brokenPlan of [
+  '{"plan":"unknown","days":["Saturday"],"indoor":true}',
+  "{",
+]) {
+  try {
+    loadSavedPlan(brokenPlan)
+  } catch (error) {
+    if (error instanceof Error) console.log(error.message)
+  }
+}

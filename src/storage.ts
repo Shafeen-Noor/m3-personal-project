@@ -6,15 +6,29 @@ const days: Day[] = ["Saturday", "Sunday"]
 export function isSavedPlan(value: unknown): value is SavedPlan {
   if (typeof value !== "object" || value === null) return false
 
-  const plan = value as Record<string, unknown>
+  if (!("plan" in value) || !isPlanId(value.plan)) return false
+  if (
+    !("days" in value) ||
+    !Array.isArray(value.days) ||
+    !value.days.every(isDay)
+  ) {
+    return false
+  }
+  if (!("indoor" in value) || typeof value.indoor !== "boolean") return false
+
   return (
-    typeof plan.plan === "string" &&
-    planIds.includes(plan.plan as PlanId) &&
-    Array.isArray(plan.days) &&
-    plan.days.every((day: unknown) => days.includes(day as Day)) &&
-    typeof plan.indoor === "boolean" &&
-    (plan.note === undefined || typeof plan.note === "string")
+    !("note" in value) ||
+    value.note === undefined ||
+    typeof value.note === "string"
   )
+}
+
+function isPlanId(value: unknown): value is PlanId {
+  return planIds.some((planId) => planId === value)
+}
+
+function isDay(value: unknown): value is Day {
+  return days.some((day) => day === value)
 }
 
 export function loadSavedPlan(raw: string): SavedPlan {
