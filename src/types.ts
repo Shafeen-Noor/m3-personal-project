@@ -1,63 +1,70 @@
-export type PlanId = "outdoors" | "creative" | "relax" | "social"
+export type PlanId = "outside" | "creative" | "rest" | "social"
+
+export type Day = "Saturday" | "Sunday"
+
+export interface Activity {
+  day: Day
+  time: string
+  name: string
+}
 
 export interface WeekendPlan {
   id: PlanId
   title: string
   description: string
-  activities: string[]
-  indoor: boolean
+  schedule: Activity[]
 }
 
-export interface ActivityOption {
+export interface PlanChoice {
   label: string
   plan: PlanId
   points: number
 }
 
-interface BaseQuestion {
+interface TimePreference {
+  kind: "time"
   text: string
+  choices: PlanChoice[]
 }
 
-export interface ChoiceQuestion extends BaseQuestion {
-  kind: "choice"
-  choices: ActivityOption[]
-}
-
-export interface ScaleQuestion extends BaseQuestion {
-  kind: "scale"
-  plan: PlanId
+interface EnergyPreference {
+  kind: "energy"
+  text: string
   low: string
   high: string
+  lowPlan: PlanId
+  highPlan: PlanId
 }
 
-export interface YesNoQuestion extends BaseQuestion {
-  kind: "yesno"
-  plan: PlanId
+interface IndoorPreference {
+  kind: "indoors"
+  text: string
+  yesPlan: PlanId
+  noPlan: PlanId
 }
 
-export type Question = ChoiceQuestion | ScaleQuestion | YesNoQuestion
+export type PlanningStep = TimePreference | EnergyPreference | IndoorPreference
 
-export interface ChoiceAnswer {
-  kind: "choice"
-  picked: ActivityOption
+interface TimeAnswer {
+  kind: "time"
+  picked: PlanChoice
 }
 
-export interface ScaleAnswer {
-  kind: "scale"
+interface EnergyAnswer {
+  kind: "energy"
   value: number
 }
 
-export interface YesNoAnswer {
-  kind: "yesno"
+interface IndoorAnswer {
+  kind: "indoors"
   value: boolean
 }
 
-export type Answer = ChoiceAnswer | ScaleAnswer | YesNoAnswer
+export type PlanningAnswer = TimeAnswer | EnergyAnswer | IndoorAnswer
 
 export interface SavedPlan {
-  title: string
   plan: PlanId
-  days: string[]
+  days: Day[]
   indoor: boolean
   note?: string
 }

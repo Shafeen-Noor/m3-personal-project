@@ -1,6 +1,6 @@
-# Weekend Planner Quiz
+# Weekend Planner
 
-A small TypeScript quiz that suggests an easy weekend plan from a few answers. It uses typed questions, a private score tally, and a guard for saved plan data.
+A small TypeScript planner that turns free time, energy, and an indoor preference into a simple weekend schedule. It uses typed planning steps, a private score tally, and a guard for saved plans.
 
 ## Run
 

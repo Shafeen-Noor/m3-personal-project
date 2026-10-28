@@ -1,40 +1,36 @@
-import { plans, questions } from "./data.ts"
-import { formatAnswer } from "./answers.ts"
-import { Planner } from "./planner.ts"
+import { formatPreference } from "./answers.ts"
+import { plans, planningSteps, timeChoices } from "./data.ts"
+import { WeekendPlanner } from "./planner.ts"
 import { loadSavedPlan } from "./storage.ts"
-import type { Answer } from "./types.ts"
+import type { PlanningAnswer } from "./types.ts"
 
-const answers: Answer[] = [
-  {
-    kind: "choice",
-    picked:
-      questions[0].kind === "choice"
-        ? questions[0].choices[0]
-        : { label: "A walk", plan: "outdoors", points: 3 },
-  },
-  { kind: "scale", value: 4 },
-  { kind: "yesno", value: true },
+const answers: PlanningAnswer[] = [
+  { kind: "time", picked: timeChoices[2] },
+  { kind: "energy", value: 2 },
+  { kind: "indoors", value: true },
 ]
-const savedPlan = loadSavedPlan(
-  JSON.stringify({
-    title: "Easy Saturday",
-    plan: "outdoors",
-    days: ["Saturday", "Sunday"],
-    indoor: false,
-    note: "Bring water",
-  }),
-)
-const planner = new Planner(plans)
 
-for (const [index, question] of questions.entries()) {
+const planner = new WeekendPlanner(plans)
+
+for (const [index, step] of planningSteps.entries()) {
   const answer = answers[index]
-  planner.add(question, answer)
-  console.log(
-    `${index + 1}. ${question.text} ${formatAnswer(question, answer)}`,
-  )
+  planner.add(step, answer)
+  console.log(formatPreference(step, answer))
 }
 
 const result = planner.bestPlan()
-console.log(`\nYour weekend: ${result.title}`)
+const savedPlan = loadSavedPlan(
+  JSON.stringify({
+    plan: result.id,
+    days: ["Saturday", "Sunday"],
+    indoor: answers[2].kind === "indoors" && answers[2].value,
+  }),
+)
+
+console.log(`\nWeekend plan: ${result.title}`)
 console.log(result.description)
-console.log(`Saved plan: ${savedPlan.title}`)
+console.log(`Saved plan: ${savedPlan.plan}`)
+
+for (const activity of result.schedule) {
+  console.log(`${activity.day} ${activity.time} ${activity.name}`)
+}

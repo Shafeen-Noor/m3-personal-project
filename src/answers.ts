@@ -1,61 +1,65 @@
-import type { ActivityOption, Answer, Question, PlanId } from "./types.ts"
+import type { PlanChoice, PlanningAnswer, PlanningStep } from "./types.ts"
 
-export interface Points {
-  plan: PlanId
-  value: number
+export interface Score {
+  plan: PlanChoice["plan"]
+  points: number
 }
 
-export function pointsFor(question: Question, answer: Answer): Points {
-  if (question.kind !== answer.kind)
-    throw new Error("Answer kind does not match")
-
-  if (question.kind === "choice" && answer.kind === "choice") {
-    const option = question.choices.find(
-      (item) => item.label === answer.picked.label,
-    )
-    if (!option) throw new Error("That choice is not available")
-    return { plan: option.plan, value: option.points }
+export function scorePreference(
+  step: PlanningStep,
+  answer: PlanningAnswer,
+): Score {
+  if (step.kind !== answer.kind) {
+    throw new Error("The answer does not match the planning step")
   }
 
-  if (question.kind === "scale" && answer.kind === "scale") {
+  if (step.kind === "time" && answer.kind === "time") {
+    const choice = step.choices.find(
+      (option) => option.label === answer.picked.label,
+    )
+    if (!choice) throw new Error("That time choice is not available")
+    return { plan: choice.plan, points: choice.points }
+  }
+
+  if (step.kind === "energy" && answer.kind === "energy") {
     if (
       !Number.isInteger(answer.value) ||
-      answer.value < 0 ||
+      answer.value < 1 ||
       answer.value > 5
     ) {
-      throw new Error("Choose a number from 0 to 5")
+      throw new Error("Choose an energy level from 1 to 5")
     }
-    return { plan: question.plan, value: answer.value }
+    return answer.value <= 2
+      ? { plan: step.lowPlan, points: 3 - answer.value }
+      : { plan: step.highPlan, points: answer.value }
   }
 
-  if (question.kind === "yesno" && answer.kind === "yesno") {
-    return { plan: question.plan, value: answer.value ? 1 : 0 }
+  if (step.kind === "indoors" && answer.kind === "indoors") {
+    return { plan: answer.value ? step.yesPlan : step.noPlan, points: 2 }
   }
 
-  throw new Error("Unknown question kind")
+  throw new Error("Unknown planning step")
 }
 
-export function formatAnswer(question: Question, answer: Answer): string {
-  if (question.kind !== answer.kind)
-    throw new Error("Answer kind does not match")
-  if (question.kind === "choice" && answer.kind === "choice") {
-    return answer.picked.label
+export function formatPreference(
+  step: PlanningStep,
+  answer: PlanningAnswer,
+): string {
+  if (step.kind !== answer.kind) {
+    throw new Error("The answer does not match the planning step")
   }
-  if (question.kind === "scale" && answer.kind === "scale") {
-    return `${answer.value}/5`
-  }
-  if (question.kind === "yesno" && answer.kind === "yesno") {
-    return answer.value ? "Yes" : "No"
-  }
-  throw new Error("Unknown question kind")
-}
 
-export function isActivityOption(value: unknown): value is ActivityOption {
-  if (typeof value !== "object" || value === null) return false
-  const option = value as Record<string, unknown>
-  return (
-    typeof option.label === "string" &&
-    typeof option.plan === "string" &&
-    typeof option.points === "number"
-  )
+  if (step.kind === "time" && answer.kind === "time") {
+    return `${step.text} ${answer.picked.label}`
+  }
+
+  if (step.kind === "energy" && answer.kind === "energy") {
+    return `${step.text} ${answer.value}/5`
+  }
+
+  if (step.kind === "indoors" && answer.kind === "indoors") {
+    return `${step.text} ${answer.value ? "Yes" : "No"}`
+  }
+
+  throw new Error("Unknown planning step")
 }
