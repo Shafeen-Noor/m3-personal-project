@@ -61,10 +61,3 @@ interface IndoorAnswer {
 }
 
 export type PlanningAnswer = TimeAnswer | EnergyAnswer | IndoorAnswer
-
-export interface SavedPlan {
-  plan: PlanId
-  days: Day[]
-  indoor: boolean
-  note?: string
-}

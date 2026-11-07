@@ -24,6 +24,6 @@ npm run format:check
 - `apps/api/src` holds the Fastify routes and session storage.
 - `apps/cli/src` holds the command-line app and its API service.
 - `apps/web/src` holds the browser app and its API service.
-- `src` holds the shared planning types, data, scoring, and saved-plan logic.
+- `src` holds the shared planning types, plan data, and scoring.
 
 The API and both clients work. Activities are kept in memory while the API is running. Next, I would add a database so plans can be saved between runs.

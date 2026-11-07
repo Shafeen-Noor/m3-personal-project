@@ -40,26 +40,3 @@ export function scorePreference(
 
   throw new Error("Unknown planning step")
 }
-
-export function formatPreference(
-  step: PlanningStep,
-  answer: PlanningAnswer,
-): string {
-  if (step.kind !== answer.kind) {
-    throw new Error("The answer does not match the planning step")
-  }
-
-  if (step.kind === "time" && answer.kind === "time") {
-    return `${step.text} ${answer.picked.label}`
-  }
-
-  if (step.kind === "energy" && answer.kind === "energy") {
-    return `${step.text} ${answer.value}/5`
-  }
-
-  if (step.kind === "indoors" && answer.kind === "indoors") {
-    return `${step.text} ${answer.value ? "Yes" : "No"}`
-  }
-
-  throw new Error("Unknown planning step")
-}
