@@ -1,17 +1,17 @@
 import { randomUUID } from "node:crypto"
 import Fastify, { type FastifyPluginAsync } from "fastify"
-import { plans, planningSteps } from "../../../src/data.ts"
-import { WeekendPlanner } from "../../../src/planner.ts"
-import type {
-  Activity,
-  Day,
-  PlanningAnswer,
-  PlanningStep,
-  WeekendPlan,
-} from "../../../src/types.ts"
+import PlanBuilder, {
+  loadPlans,
+  planningSteps,
+  type Activity,
+  type Day,
+  type WeekendPlan,
+  type PlanningAnswer,
+  type PlanningStep,
+} from "@weekend-planner/core"
 
 interface SessionEntry {
-  planner: WeekendPlanner
+  planner: PlanBuilder
   answers: PlanningAnswer[]
   activities?: PlannedActivity[]
 }
@@ -76,6 +76,18 @@ interface ActivityReply {
   activity: PlannedActivity
 }
 
+interface ActivityQuery {
+  day?: string
+}
+
+interface SuggestedActivity extends Activity {
+  plan: string
+}
+
+interface SuggestionsReply {
+  activities: SuggestedActivity[]
+}
+
 interface ActivitiesReply {
   activities: PlannedActivity[]
 }
@@ -90,6 +102,16 @@ interface ResultReply extends Omit<WeekendPlan, "schedule"> {
 }
 
 const entries = new Map<string, SessionEntry>()
+
+let plans: WeekendPlan[]
+try {
+  plans = await loadPlans()
+} catch (error) {
+  console.error(
+    error instanceof Error ? error.message : "Could not load weekend plans",
+  )
+  process.exit(1)
+}
 
 function findSession(id: string | undefined): SessionEntry | undefined {
   return id ? entries.get(id) : undefined
@@ -165,6 +187,22 @@ const api: FastifyPluginAsync = async (fastify) => {
     ),
   }))
 
+  fastify.get<{
+    Querystring: ActivityQuery
+    Reply: SuggestionsReply | ErrorReply
+  }>("/activities", async (request, reply) => {
+    const { day } = request.query
+    if (day && day !== "Saturday" && day !== "Sunday") {
+      return reply.code(400).send({ error: "Choose Saturday or Sunday" })
+    }
+    const activities = plans.flatMap((plan) =>
+      plan.schedule
+        .filter((activity) => !day || activity.day === day)
+        .map((activity) => ({ ...activity, plan: plan.title })),
+    )
+    return { activities }
+  })
+
   fastify.post<{
     Body: StartBody | undefined
     Reply: StartReply | ErrorReply
@@ -175,7 +213,7 @@ const api: FastifyPluginAsync = async (fastify) => {
 
     const sessionId = randomUUID()
     entries.set(sessionId, {
-      planner: new WeekendPlanner(plans),
+      planner: new PlanBuilder(plans),
       answers: [],
     })
     return reply.code(201).send({ session_id: sessionId })

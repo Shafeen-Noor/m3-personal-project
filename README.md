@@ -1,22 +1,22 @@
 # Weekend Planner
 
-Weekend Planner turns a few preferences into a starting weekend schedule. In the web app, you can filter by day, add stops, edit or remove them, and copy the plan. The CLI and web page get the questions and result from the API.
+Weekend Planner turns a few preferences into a weekend schedule. The web app lets you filter by day, add, edit, and remove stops, and copy the plan. The CLI and web app use the same API.
 
 ## Run
 
 ```sh
-npm install
-npm run api
+pnpm install
+pnpm api
 ```
 
-In a second terminal, run `npm run web` and open [http://localhost:3001](http://localhost:3001). Run `npm start -- plan --help` to see the CLI options or `npm start -- plan --time "A few hours outside" --energy 4 --indoors no` to make a plan.
+In a second terminal, run `pnpm web` and open [http://localhost:3001](http://localhost:3001). Run `pnpm start -- plan --help` to see the CLI options or `pnpm start -- plan "A few hours outside" --energy 4 --indoors no` to make a plan. Run `pnpm start -- activities` to choose a day, or pass `Saturday` or `Sunday` directly.
 
 ## Check
 
 ```sh
-npm run lint
-npm run typecheck
-npm run format:check
+pnpm lint
+pnpm typecheck
+pnpm format:check
 ```
 
 ## Project layout
@@ -24,6 +24,6 @@ npm run format:check
 - `apps/api/src` holds the Fastify routes and session storage.
 - `apps/cli/src` holds the command-line app and its API service.
 - `apps/web/src` holds the browser app and its API service.
-- `src` holds the shared planning types, plan data, and scoring.
+- `packages/core` holds the shared types, plan data, and scoring. The workspace uses a shared dependency catalog and Nx task ordering.
 
-The API and both clients work. Activities are kept in memory while the API is running. Next, I would add a database so plans can be saved between runs.
+The API and both clients use the same plan data and activity routes. Activities stay in memory while the API runs. A database would be the next step.

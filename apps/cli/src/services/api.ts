@@ -1,3 +1,5 @@
+import type { Activity, WeekendPlan as PlanModel } from "@weekend-planner/core"
+
 export interface ApiError {
   error: string
 }
@@ -10,10 +12,10 @@ export interface PlanPrompt {
   high?: string
 }
 
-export interface PlanResult {
-  title: string
-  description: string
-  schedule: { day: string; time: string; name: string }[]
+export type PlanResult = Omit<PlanModel, "schedule"> & { schedule: Activity[] }
+
+export interface ActivitySuggestion extends Activity {
+  plan: string
 }
 
 let sessionId = ""
@@ -76,4 +78,10 @@ export async function makePlan(
   })
 
   return request<PlanResult>("/session/result")
+}
+
+export function listActivities(day: string): Promise<{
+  activities: ActivitySuggestion[]
+}> {
+  return request(`/activities?day=${encodeURIComponent(day)}`)
 }

@@ -6,7 +6,7 @@ import type {
   WeekendPlan,
 } from "./types.ts"
 
-export class WeekendPlanner {
+export default class WeekendPlanner {
   private tally: Record<PlanId, number> = {
     outside: 0,
     creative: 0,

@@ -2,26 +2,21 @@
   "name": "weekend-planner",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.25.0",
   "scripts": {
-    "start": "node --experimental-strip-types apps/cli/src/index.ts",
-    "api": "node --experimental-strip-types apps/api/src/index.ts",
-    "dev": "nodemon apps/api/src/index.ts",
-    "web": "node --experimental-strip-types apps/web/src/server.ts",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit && tsc --project apps/web/tsconfig.json",
+    "start": "pnpm --filter @weekend-planner/cli start",
+    "api": "pnpm --filter @weekend-planner/api start",
+    "web": "pnpm --filter @weekend-planner/web start",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "@eslint/js": "^9.24.0",
-    "eslint": "^9.24.0",
-    "@types/node": "^22.13.10",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.2",
-    "typescript-eslint": "^8.29.0",
-    "nodemon": "^3.1.10"
-  },
-  "dependencies": {
-    "commander": "^14.0.0",
-    "fastify": "^5.8.0"
+    "@eslint/js": "catalog:",
+    "eslint": "catalog:",
+    "nx": "^24.0.1",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
   }
 }
