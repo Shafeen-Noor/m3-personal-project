@@ -4,7 +4,7 @@ async function request(path, options = {}) {
   const response = await fetch(`/api${path}`, {
     ...options,
     headers: {
-      "content-type": "application/json",
+      ...(options.body ? { "content-type": "application/json" } : {}),
       ...(sessionId ? { "x-session-id": sessionId } : {}),
       ...options.headers,
     },
@@ -39,4 +39,28 @@ export function getProgress() {
 
 export function getResult() {
   return request("/session/result")
+}
+
+export function getActivities() {
+  return request("/session/activities")
+}
+
+export function addActivity(activity) {
+  return request("/session/activities", {
+    method: "POST",
+    body: JSON.stringify(activity),
+  })
+}
+
+export function updateActivity(id, activity) {
+  return request(`/session/activities/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(activity),
+  })
+}
+
+export function removeActivity(id) {
+  return request(`/session/activities/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  })
 }

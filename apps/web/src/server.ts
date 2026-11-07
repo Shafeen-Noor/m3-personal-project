@@ -20,8 +20,9 @@ const server = createServer(async (request, reply) => {
         {
           method,
           headers: {
-            "content-type":
-              request.headers["content-type"] ?? "application/json",
+            ...(request.headers["content-type"]
+              ? { "content-type": request.headers["content-type"] }
+              : {}),
             ...(sessionId
               ? {
                   "x-session-id": Array.isArray(sessionId)

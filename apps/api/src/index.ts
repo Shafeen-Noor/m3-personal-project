@@ -3,6 +3,8 @@ import Fastify, { type FastifyPluginAsync } from "fastify"
 import { plans, planningSteps } from "../../../src/data.ts"
 import { WeekendPlanner } from "../../../src/planner.ts"
 import type {
+  Activity,
+  Day,
   PlanningAnswer,
   PlanningStep,
   WeekendPlan,
@@ -11,6 +13,11 @@ import type {
 interface SessionEntry {
   planner: WeekendPlanner
   answers: PlanningAnswer[]
+  activities?: PlannedActivity[]
+}
+
+interface PlannedActivity extends Activity {
+  id: string
 }
 
 interface SessionHeader {
@@ -59,17 +66,61 @@ interface StartReply {
   session_id: string
 }
 
+interface ActivityBody {
+  day?: string
+  time?: string
+  name?: string
+}
+
+interface ActivityReply {
+  activity: PlannedActivity
+}
+
+interface ActivitiesReply {
+  activities: PlannedActivity[]
+}
+
 interface ProgressReply {
   answered: number
   total: number
 }
 
-type ResultReply = WeekendPlan
+interface ResultReply extends Omit<WeekendPlan, "schedule"> {
+  schedule: PlannedActivity[]
+}
 
 const entries = new Map<string, SessionEntry>()
 
 function findSession(id: string | undefined): SessionEntry | undefined {
   return id ? entries.get(id) : undefined
+}
+
+function findActivities(entry: SessionEntry): PlannedActivity[] | undefined {
+  if (entry.answers.length < planningSteps.length) return undefined
+  if (!entry.activities) {
+    entry.activities = entry.planner.bestPlan().schedule.map((activity) => ({
+      ...activity,
+      id: randomUUID(),
+    }))
+  }
+  return entry.activities
+}
+
+function toActivity(body: ActivityBody | undefined): Activity | undefined {
+  if (!body) return undefined
+  const day = body.day
+  const time = body.time
+  const name = body.name?.trim()
+  if (
+    (day !== "Saturday" && day !== "Sunday") ||
+    !time ||
+    !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(time) ||
+    !name ||
+    name.length > 60
+  ) {
+    return undefined
+  }
+  return { day: day as Day, time, name }
 }
 
 function toAnswer(
@@ -161,6 +212,88 @@ const api: FastifyPluginAsync = async (fastify) => {
 
   fastify.get<{
     Headers: SessionHeader
+    Reply: ActivitiesReply | ErrorReply
+  }>("/session/activities", async (request, reply) => {
+    const entry = findSession(request.headers["x-session-id"])
+    if (!entry) return reply.code(401).send({ error: "Unknown session" })
+    const activities = findActivities(entry)
+    if (!activities) {
+      return reply.code(409).send({ error: "Finish the plan questions first" })
+    }
+    return { activities }
+  })
+
+  fastify.post<{
+    Headers: SessionHeader
+    Body: ActivityBody | undefined
+    Reply: ActivityReply | ErrorReply
+  }>("/session/activities", async (request, reply) => {
+    const entry = findSession(request.headers["x-session-id"])
+    if (!entry) return reply.code(401).send({ error: "Unknown session" })
+    const activities = findActivities(entry)
+    if (!activities) {
+      return reply.code(409).send({ error: "Finish the plan questions first" })
+    }
+    const activity = request.body && toActivity(request.body)
+    if (!activity) {
+      return reply
+        .code(400)
+        .send({ error: "Check the day, time, and activity" })
+    }
+    const plannedActivity = { ...activity, id: randomUUID() }
+    activities.push(plannedActivity)
+    activities.sort(
+      (a, b) => a.day.localeCompare(b.day) || a.time.localeCompare(b.time),
+    )
+    return reply.code(201).send({ activity: plannedActivity })
+  })
+
+  fastify.patch<{
+    Headers: SessionHeader
+    Params: { id: string }
+    Body: ActivityBody | undefined
+    Reply: ActivityReply | ErrorReply
+  }>("/session/activities/:id", async (request, reply) => {
+    const entry = findSession(request.headers["x-session-id"])
+    if (!entry) return reply.code(401).send({ error: "Unknown session" })
+    const activities = findActivities(entry)
+    if (!activities) {
+      return reply.code(409).send({ error: "Finish the plan questions first" })
+    }
+    const index = activities.findIndex(({ id }) => id === request.params.id)
+    if (index < 0) return reply.code(404).send({ error: "Activity not found" })
+    const activity = request.body && toActivity(request.body)
+    if (!activity) {
+      return reply
+        .code(400)
+        .send({ error: "Check the day, time, and activity" })
+    }
+    activities[index] = { ...activity, id: request.params.id }
+    activities.sort(
+      (a, b) => a.day.localeCompare(b.day) || a.time.localeCompare(b.time),
+    )
+    return { activity: activities.find(({ id }) => id === request.params.id)! }
+  })
+
+  fastify.delete<{
+    Headers: SessionHeader
+    Params: { id: string }
+    Reply: ErrorReply | undefined
+  }>("/session/activities/:id", async (request, reply) => {
+    const entry = findSession(request.headers["x-session-id"])
+    if (!entry) return reply.code(401).send({ error: "Unknown session" })
+    const activities = findActivities(entry)
+    if (!activities) {
+      return reply.code(409).send({ error: "Finish the plan questions first" })
+    }
+    const index = activities.findIndex(({ id }) => id === request.params.id)
+    if (index < 0) return reply.code(404).send({ error: "Activity not found" })
+    activities.splice(index, 1)
+    return reply.code(204).send(undefined)
+  })
+
+  fastify.get<{
+    Headers: SessionHeader
     Reply: ResultReply | ErrorReply
   }>("/session/result", async (request, reply) => {
     const entry = findSession(request.headers["x-session-id"])
@@ -169,7 +302,11 @@ const api: FastifyPluginAsync = async (fastify) => {
       return reply.code(409).send({ error: "Some questions have no answer" })
     }
 
-    const { id, title, description, schedule } = entry.planner.bestPlan()
+    const { id, title, description } = entry.planner.bestPlan()
+    const schedule = findActivities(entry)
+    if (!schedule) {
+      return reply.code(409).send({ error: "Some questions have no answer" })
+    }
     return { id, title, description, schedule }
   })
 }
