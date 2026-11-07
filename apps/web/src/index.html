@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weekend Planner</title>
+    <style>
+      :root {
+        color: #282721;
+        background: #f5f3ee;
+        font-family: Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+      main {
+        width: min(680px, calc(100% - 32px));
+        padding: 32px;
+        background: white;
+        border: 1px solid #ddd8cc;
+        border-radius: 18px;
+        box-shadow: 0 12px 40px #28272112;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-family: Georgia, serif;
+        font-size: 2.4rem;
+      }
+      p {
+        line-height: 1.55;
+      }
+      .eyebrow {
+        color: #68785b;
+        font-size: 0.8rem;
+        font-weight: bold;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .options {
+        display: grid;
+        gap: 10px;
+        margin: 22px 0;
+      }
+      button {
+        padding: 13px 16px;
+        color: inherit;
+        background: #fff;
+        border: 1px solid #cfcabc;
+        border-radius: 10px;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      button:hover,
+      button:focus-visible {
+        outline: 2px solid #68785b;
+        outline-offset: 2px;
+      }
+      .primary {
+        color: white;
+        background: #526747;
+        border-color: #526747;
+        text-align: center;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+      }
+      .row button {
+        flex: 1;
+      }
+      .progress {
+        height: 6px;
+        margin: 18px 0;
+        overflow: hidden;
+        background: #ece9e0;
+        border-radius: 9px;
+      }
+      .progress span {
+        display: block;
+        height: 100%;
+        background: #8e9c76;
+        transition: width 0.2s;
+      }
+      .schedule {
+        display: grid;
+        gap: 8px;
+        padding: 0;
+        list-style: none;
+      }
+      .schedule li {
+        display: grid;
+        grid-template-columns: 90px 65px 1fr;
+        padding: 12px 0;
+        border-bottom: 1px solid #eeeae2;
+      }
+      .muted {
+        color: #77756e;
+      }
+      @media (max-width: 500px) {
+        main {
+          padding: 24px;
+        }
+        .schedule li {
+          grid-template-columns: 1fr;
+          gap: 3px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">A little room for the weekend</p>
+      <h1>Weekend Planner</h1>
+      <section id="app" aria-live="polite">
+        <p>Pick a few things and get a simple plan for your weekend.</p>
+        <button class="primary" id="start">Make a plan</button>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
